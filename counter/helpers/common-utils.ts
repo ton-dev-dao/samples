@@ -29,7 +29,7 @@ function getFilePath(envName: string, defaultFilePath: string) {
     filePath = path.normalize(filePath);
     if (!fs.existsSync(filePath)) {
         const baseName = path.basename(filePath);
-        throw new Error(`Can't find file "${baseName}". Set env variable "${envName}" to define a path to the file." `);
+        throw new Error(`Can't find file "${baseName}". Put it to ./bin directory or set env variable "${envName}" to define a path to the file." `);
     }
     return filePath;
 }
@@ -38,8 +38,8 @@ function getCompilerAndCli() {
     const SOLC_PATH = getFilePath('SOLC_PATH', './bin/solc');
     const ASM_PATH = getFilePath('ASM_PATH', './bin/asm');
     const STDLIB_PATH = getFilePath('STDLIB_PATH', './bin/stdlib_sol.tvm');
-    const EVER_CLI = getFilePath('EVER_CLI', './bin/ever-cli');
-    return { SOLC_PATH, ASM_PATH, STDLIB_PATH, EVER_CLI };
+    const TON_DEV_CLI = getFilePath('TON_DEV_CLI', './bin/ton-dev-cli');
+    return { SOLC_PATH, ASM_PATH, STDLIB_PATH, TON_DEV_CLI };
 }
 
 function getBocFile(contract: string) {
@@ -66,11 +66,11 @@ export async function compileSolidity(contract: string) {
 }
 
 export async function buildData(contract: string, params: string) {
-    let { EVER_CLI } = getCompilerAndCli();
+    let { TON_DEV_CLI } = getCompilerAndCli();
     const bocFile = getBocFile(contract);
     const newBocFile = getRandPath();
     fs.copyFileSync(bocFile, newBocFile);
-    await runCommand(`${EVER_CLI} \
+    await runCommand(`${TON_DEV_CLI} \
 genaddr \
 ${newBocFile} \
 --abi contracts/${contract}.abi.json \
@@ -85,9 +85,9 @@ ${newBocFile} \
 }
 
 async function callDecodeStateVariables(contract: string, bocPath: string) {
-    let { EVER_CLI } = getCompilerAndCli();
+    let { TON_DEV_CLI } = getCompilerAndCli();
     const stdout = (
-        await runCommand(`${EVER_CLI} \
+        await runCommand(`${TON_DEV_CLI} \
 -j decode account data \
 --abi contracts/${contract}.abi.json \
 --tvc ${bocPath}`)
@@ -103,9 +103,9 @@ export async function decodeStateVariables(provider: ContractProvider, contract:
 }
 
 async function callGetter(bocPath: string, contract: string, method: string, params: string) {
-    let { EVER_CLI } = getCompilerAndCli();
+    let { TON_DEV_CLI } = getCompilerAndCli();
     const stdout = (
-        await runCommand(`${EVER_CLI} \
+        await runCommand(`${TON_DEV_CLI} \
 -j run \
 --tvc \
 --abi contracts/${contract}.abi.json \
@@ -144,9 +144,9 @@ export async function getter(provider: ContractProvider, contract: string, metho
 }
 
 export async function buildMessageBody(contract: string, functionName: string, params: string) {
-    let { EVER_CLI } = getCompilerAndCli();
+    let { TON_DEV_CLI } = getCompilerAndCli();
     const stdout = (
-        await runCommand(`${EVER_CLI} \
+        await runCommand(`${TON_DEV_CLI} \
 -j body \
 --abi 'contracts/${contract}.abi.json' \
 ${functionName} \
@@ -167,9 +167,9 @@ export async function signedExternalBody(
     method: string,
     params: string,
 ) {
-    let { EVER_CLI } = getCompilerAndCli();
+    let { TON_DEV_CLI } = getCompilerAndCli();
     const stdout = (
-        await runCommand(`${EVER_CLI} \
+        await runCommand(`${TON_DEV_CLI} \
 -j message \
 --sign ${secretKey.toString('hex')} \
 --abi 'contracts/${contract}.abi.json' \
